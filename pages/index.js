@@ -1,6 +1,5 @@
 import {useState} from 'react';
 import { useMutation } from 'react-query';
-import styles from '../styles/Home.module.css';
 
 import TodoItem from '../components/Todo/todo-item';
 import Button from '../components/Button/button';
@@ -50,7 +49,7 @@ export default function Home(props) {
 })
 
   const AddTodoComponent = () => (
-    <div className={styles.inputContainer}>
+    <div className="flex flex-col items-center justify-center w-96 bg-white p-2.5 rounded-md">
       <>
         <Input 
           value={title}
@@ -82,12 +81,12 @@ export default function Home(props) {
   )
   
   return (
-    <div className={styles.container}>
-      <div className={styles.title}>All Todos</div>
+    <div className="h-screen w-screen flex flex-col items-center justify-start py-16">
+      <div className="text-3xl">All Todos</div>
       <>
         {allTodos.map((todo) => <TodoItem key={todo.id} title={todo.title} completed={todo.completed} link={todo.id} />)}
       </>
-      <div className={styles.buttonContainer}>
+      <div className="flex justify-between w-96">
         <Button title='Complete' completed />
         <Button
           title='Add'

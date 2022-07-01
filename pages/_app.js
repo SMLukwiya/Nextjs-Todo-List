@@ -15,9 +15,4 @@ function MyApp({ Component, pageProps }) {
   )
 }
 
-/*
-  TODO
-  Add TailwindCss
-*/
-
 export default MyApp

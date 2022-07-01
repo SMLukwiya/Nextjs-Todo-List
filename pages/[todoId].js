@@ -3,7 +3,6 @@ import {useState} from 'react';
 import { useMutation } from 'react-query';
 import { useRouter } from 'next/router';
 
-import styles from '../styles/Todo.module.css';
 import Input from '../components/Input/input';
 import Button from '../components/Button/button';
 import Modal from '../components/Modal/modal';
@@ -30,10 +29,11 @@ const deleteTodo = async(id) => {
 const Todo = (props) => {
     const {todo} = props;
 
+    const [_todo, setTodo] = useState(todo);
     const [title, setTitle] = useState(todo.title);
     const [description, setDescription] = useState(todo.description);
-    const [visible, setVisible] = useState(false);
     const [completed, setCompleted] = useState(todo.completed);
+    const [visible, setVisible] = useState(false);
     const router = useRouter();
     const { query: {todoId}} = router;
 
@@ -45,9 +45,7 @@ const Todo = (props) => {
 
     const {mutate: update, isLoading: updating} = useMutation(() => updateTodo({id: +todoId, title, description, completed: completed === 'true' ? true : false}), {
         onSuccess: (data) => {
-            setTitle(data.title)
-            setDescription(data.description)
-            setCompleted(data.completed)
+            setTodo(data);
             setVisible(false);
         },
         onError: (error) => {
@@ -56,7 +54,7 @@ const Todo = (props) => {
     })
 
     const {mutate: delTodo, isLoading: deleting} = useMutation(() => deleteTodo({id: +todoId}), {
-        onSuccess: (data) => {
+        onSuccess: () => {
             router.push('/')
         },
         onError: (error) => {
@@ -75,7 +73,7 @@ const Todo = (props) => {
     }
 
     const UpdateTodoComponent = () => (
-        <div className={styles.inputContainer}>
+        <div className="flex flex-col items-center justify-center w-96 bg-white p-2.5 rounded-md">
           <>
             <Input 
               value={title}
@@ -94,9 +92,14 @@ const Todo = (props) => {
               onChange={onChangeTextHandler}
             />
           </>
-          <div className={styles.selectContainer}>
-            <label className={styles.selectLabel}>Status: </label>
-            <select value={completed} onChange={onChangeTextHandler} name='status' className={styles.select}>
+          <div className="w-full">
+            <label className="text-xs">Status: </label>
+            <select 
+                value={completed}
+                onChange={onChangeTextHandler}
+                name='status'
+                className="my-4 border border-gray-600 border-solid rounded-lg p-1.5 text-sm"
+            >
                 <option value={true}>Completed</option>
                 <option value={false}>Not Completed</option>
             </select>
@@ -116,25 +119,41 @@ const Todo = (props) => {
     )
 
     return (
-        <div className={styles.container}>
-            <div className={styles.content}>
+        <div className="h-screen w-screen flex flex-col items-center justify-start py-16">
+            <div className="border border-gray-400 border-solid rounded-md p-1.5 w-80">
                 <>
-                    <div className={styles.title}>{title}</div>
-                    <div className={styles.description}>{description}</div>
-                    <div className={styles.statusComplete}>{completed ? 'Complete' : 'Incomplete'}</div>
-                </>
-                <div className={styles.editContainer}>
-                    <div className={styles.iconContainer}>
-                        <span className={styles.edit}>Edit</span>
-                        <AiFillEdit className={styles.icon} onClick={() => setVisible(true)} />
+                    <div className="text-xl text-gray-800">
+                        {_todo.title}
                     </div>
-                    <div className={styles.iconContainer}>
-                        <span className={styles.edit}>Delete</span>
-                        <AiFillDelete className={styles.iconDelete} onClick={() => delTodo()} />
+                    <div className="text-base mt-2.5 mb-1.5">
+                        {_todo.description}
+                    </div>
+                    <div className="text-green p-1 items-end rounded-xl border border-solid border-green-900 text-xs w-20 text-center">
+                        {_todo.completed ? 'Complete' : 'Incomplete'}
+                    </div>
+                </>
+                <div className="flex items-center justify-between mt-2.5 mb-1.5">
+                    <div className="flex items-center justify-center">
+                        <span className="text-xs">Edit</span>
+                        <AiFillEdit 
+                            className="text-base text-gray-700 cursor-pointer"
+                            onClick={() => setVisible(true)}
+                        />
+                    </div>
+                    <div className="flex items-center justify-center">
+                        <span className="text-xs">Delete</span>
+                        <AiFillDelete
+                            className="text-base text-red-700 cursor-pointer"
+                            onClick={() => delTodo()}
+                        />
                     </div>
                 </div>
             </div>
-            {visible && <Modal onClose={() =>setVisible(false)}>{UpdateTodoComponent()}</Modal>}
+            {visible && 
+                <Modal onClose={() =>setVisible(false)}>
+                    {UpdateTodoComponent()}
+                </Modal>
+            }
         </div>
     )
 }
