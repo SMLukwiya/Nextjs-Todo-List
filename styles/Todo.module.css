@@ -1,0 +1,101 @@
+.container {
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    padding: 50px 0;
+    align-items: center;
+    justify-content: flex-start;
+    flex-direction: column;
+}
+
+.content {
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    width: 300px;
+    padding: 5px;
+}
+
+.title {
+    font-size: 22px;
+}
+
+.description {
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+
+.editContainer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 10px 0 5px;
+}
+
+.iconContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.edit {
+    font-size: 12px;
+}
+
+.icon {
+    font-size: 15px;
+    color: rgb(55, 55, 55);
+}
+
+.icon:hover {
+    cursor: pointer;
+}
+
+.iconDelete {
+    font-size: 15px;
+    color: red
+}
+
+.iconDelete:hover {
+    cursor: pointer;
+}
+
+.statusComplete {
+    color: green;
+    padding: 3px;
+    align-items: flex-end;
+    border-radius: 10px;
+    border: 1px solid green;
+    font-size: 12px;
+    width: 80px;
+    text-align: center;
+}
+
+.statusIncomplete {
+
+}
+
+.inputContainer {
+    width: 350px;
+    padding: 10px;
+    background-color: #FFF;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.selectContainer {
+    width: 100%;
+}
+
+.selectLabel {
+    font-size: 13px;
+}
+
+.select {
+    margin: 15px 0;
+    border: 1px solid darkgray;
+    padding: 5px;
+    border-radius: 10px;
+}
