@@ -1,66 +1,31 @@
 import {AiFillEdit, AiFillDelete} from 'react-icons/ai';
-import {useState} from 'react';
-import { useMutation } from 'react-query';
+import {useState, useEffect} from 'react';
 import { useRouter } from 'next/router';
+import { useQueryClient } from 'react-query';
 
 import Input from '../components/Input/input';
 import Button from '../components/Button/button';
 import Modal from '../components/Modal/modal';
 import { prisma } from "../config/prisma";
-
-const updateTodo = async(data) => {
-    const response = await fetch('/api/todos-update', {
-      method: 'POST',
-      body: JSON.stringify(data)
-    });
-
-    return response.json();
-}
-
-const deleteTodo = async(id) => {
-    const response = await fetch('/api/todos-delete', {
-        method: 'DELETE',
-        body: JSON.stringify(id)
-    });
-
-    return response.json();
-}
+import { useFetchTodoById } from '../utils/hooks/useFetchTodoById';
+import {useMutateTodo} from '../utils/hooks/useMutateTodo';
+import { getTodo, updateTodo, deleteTodo } from '../utils/api-functions';
 
 const Todo = (props) => {
     const {todo} = props;
 
     const [_todo, setTodo] = useState(todo);
+
     const [title, setTitle] = useState(todo.title);
     const [description, setDescription] = useState(todo.description);
     const [completed, setCompleted] = useState(todo.completed);
+    // Modal
     const [visible, setVisible] = useState(false);
+    // router
     const router = useRouter();
     const { query: {todoId}} = router;
-
-    if (!props.todo) {
-        return (
-            <div>Todo not found</div>
-        )
-    }
-
-    const {mutate: update, isLoading: updating} = useMutation(() => updateTodo({id: +todoId, title, description, completed: completed === 'true' ? true : false}), {
-        onSuccess: (data) => {
-            setTodo(data);
-            setVisible(false);
-        },
-        onError: (error) => {
-            console.log('Update Error', error)
-        }
-    })
-
-    const {mutate: delTodo, isLoading: deleting} = useMutation(() => deleteTodo({id: +todoId}), {
-        onSuccess: () => {
-            router.push('/')
-        },
-        onError: (error) => {
-            console.log('Delete Error: ', error);
-        }
-    })
+    // client
+    const queryClient = useQueryClient();
 
     const onChangeTextHandler = (e) => {
         if (e.target.name === 'title') {
@@ -71,6 +36,40 @@ const Todo = (props) => {
             setCompleted(e.target.value)
         }
     }
+
+    const [isLoading, data, isError, error] = useFetchTodoById(todoId, () => getTodo({todoId}));
+    
+    useEffect(() => {
+        if (data) {
+            setTodo(data);
+        }
+
+        if (isError) {
+            console.log(error)
+        }
+    }, [data, isError, error]);
+
+    const {mutate : update, isMutating: updating} = useMutateTodo({
+        mutateFn: () => updateTodo({id: +todoId, title, description, completed: completed === 'true' ? true : false}),
+        onSuccess: (data, variables) => {
+            queryClient.setQueryData(['todo', todoId], data)
+            setVisible(false);
+        },
+        onError: (error) => {
+            console.log('Update Error', error);
+            setVisible(false);
+        }
+    });
+
+    const {mutate : delTodo, isMutating: deleting} = useMutateTodo({
+        mutateFn: () => deleteTodo({id: +todoId, title, description, completed: completed === 'true' ? true : false}),
+        onSuccess: () => {
+            router.push('/')
+        },
+        onError: (error) => {
+            console.log('Delete Error: ', error);
+        }
+    });
 
     const UpdateTodoComponent = () => (
         <div className="flex flex-col items-center justify-center w-96 bg-white p-2.5 rounded-md">
@@ -158,7 +157,7 @@ const Todo = (props) => {
     )
 }
 
-export const getServerSideProps = async(context) => {
+export const getStaticProps = async(context) => {
     const todoId = context.params.todoId;
 
     const todo = await prisma.todo.findUnique({
@@ -174,7 +173,7 @@ export const getServerSideProps = async(context) => {
     }
   }
 
-/*export const getStaticPaths = async() => {
+export const getStaticPaths = async() => {
     const todos = await prisma.todo.findMany();
     const paths = todos.map(todo => ({params: {todoId: `${todo.id}`}}));
 
@@ -182,6 +181,6 @@ export const getServerSideProps = async(context) => {
         paths: paths,
         fallback: true
     }
-}*/
+}
 
 export default Todo;

@@ -1,30 +1,20 @@
-import {useState} from 'react';
-import { useMutation } from 'react-query';
+import {useState, useEffect} from 'react';
 
 import TodoItem from '../components/Todo/todo-item';
 import Button from '../components/Button/button';
 import Input from '../components/Input/input';
 import Modal from '../components/Modal/modal';
 import {prisma} from '../config/prisma';
-
-const saveTodo = async(data) => {
-  const response = await fetch('/api/todos-add', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  });
-
-  if (!response.ok) {
-    throw new Error(response.statusText);
-  }
-
-  return await response.json();
-}
+import { useFetchTodo } from '../utils/hooks/useFetchTodo';
+import { useMutateTodo } from '../utils/hooks/useMutateTodo';
+import { saveTodo, getAllTodos } from '../utils/api-functions';
 
 export default function Home(props) {
   const {todos} = props;
   const [allTodos, setAllTodos] = useState(todos);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  // Modal
   const [visible, setVisible] = useState(false);
 
   const onChangeTextHandler = (e) =>  {
@@ -35,18 +25,34 @@ export default function Home(props) {
     }
   }
 
-  const {mutate, isLoading} = useMutation(() => saveTodo({title, description, completed: false}), {
-    onMutate: data => {
+  const [isLoading, data, isError, error] = useFetchTodo({
+    queryId: 'fetch-all-todos',
+    fetchFn: getAllTodos
+  });
 
-    },
+  console.log(data)
+
+  useEffect(() => {
+    if (data) {
+      setAllTodos(data)
+    }
+
+    if (isError) {
+      console.log(error);
+    }
+  }, [data, isError, error])
+
+  const {mutate, isMutating} = useMutateTodo({
+    mutateFn: () => saveTodo({title, description, completed: false}),
     onSuccess: (data) => {
-        setAllTodos([...allTodos, data])
-        setVisible(false);
+      setAllTodos([...allTodos, data]);
+      setVisible(false);
     },
     onError: (error) => {
-        console.log('Error', error)
+      console.log(error);
+      setVisible(false);
     }
-})
+  })
 
   const AddTodoComponent = () => (
     <div className="flex flex-col items-center justify-center w-96 bg-white p-2.5 rounded-md">
@@ -69,13 +75,15 @@ export default function Home(props) {
         />
       </>
       <>
-        <Button
-          title='Save'
-          onPress={() =>
-              mutate()
-          }
-          round
+        {isMutating ? <div>Saving</div> :
+          <Button
+            title='Save'
+            onPress={() =>
+                mutate()
+            }
+            round
           />
+        }
       </>
     </div>
   )
@@ -101,7 +109,7 @@ export default function Home(props) {
   )
 }
 
-export const getServerSideProps = async() => {
+export const getStaticProps = async() => {
   const todos = await prisma.todo.findMany();
 
   return {
